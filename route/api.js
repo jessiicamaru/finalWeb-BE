@@ -1,11 +1,12 @@
 import express from 'express';
-import { getAllTrainSchedule } from '../controller/apiController.js';
+import { getAllTrainSchedule, getData } from '../controller/apiController.js';
 
 let router = express.Router();
 
 const initAPIRoute = (app) => {
-    router.get('/:trainid', getAllTrainSchedule);
-    router.get('/:stationid', getAllTrainSchedule);
+    router.get('/search/:trainid', getAllTrainSchedule);
+    router.get('/search/:stationid', getAllTrainSchedule);
+    router.post('/senddata', getData);
 
     return app.use('/api/v1/', router);
 };
