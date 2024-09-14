@@ -28,7 +28,7 @@ const getData = async (req, res) => {
 
     switch (way) {
         case 1: {
-            const data = { date, way, list: [] };
+            const data = { date, way, list: [], fromStation, toStation };
             let flag = false;
             if (stationIndex.indexOf(fromStation) > stationIndex.indexOf(toStation)) {
                 flag = true;
@@ -59,18 +59,20 @@ const getData = async (req, res) => {
             let flag = true;
 
             for (let i = 0; i <= 1; i++) {
-                let data = { date, way, list: [] };
+                let data = {
+                    date,
+                    way,
+                    list: [],
+                    toStation: flag ? toStation : fromStation,
+                    fromStation: flag ? fromStation : toStation,
+                };
                 flag = !flag;
                 let start = flag ? 8 : 1;
                 let end = flag ? 14 : 7;
 
                 for (let i = start; i <= end; i++) {
-                    const [rows1, fields1] = await pool.execute(
-                        `SELECT * FROM se${i}schedule WHERE StationID = '${fromStation ? toStation : fromStation}'`
-                    );
-                    const [rows2, fields2] = await pool.execute(
-                        `SELECT * FROM se${i}schedule WHERE StationID = '${toStation ? fromStation : toStation}'`
-                    );
+                    const [rows1, fields1] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${flag ? toStation : fromStation}'`);
+                    const [rows2, fields2] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${flag ? fromStation : toStation}'`);
 
                     if (rows1 && rows2) {
                         data.list.push({
