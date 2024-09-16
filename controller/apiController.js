@@ -56,23 +56,43 @@ const getData = async (req, res) => {
         case 2: {
             const dataList = [];
 
-            let flag = true;
-
+            let flag = false;
             for (let i = 0; i <= 1; i++) {
                 let data = {
                     date,
                     way,
                     list: [],
-                    toStation: flag ? toStation : fromStation,
-                    fromStation: flag ? fromStation : toStation,
+                    toStation: i == 0 ? toStation : fromStation,
+                    fromStation: i == 0 ? fromStation : toStation,
                 };
-                flag = !flag;
-                let start = flag ? 8 : 1;
-                let end = flag ? 14 : 7;
+                let start = 0;
+                let end = 0;
+
+                if (i == 0) {
+                    if (stationIndex.indexOf(fromStation) > stationIndex.indexOf(toStation)) {
+                        start = 8;
+                        end = 14;
+                    } else {
+                        start = 1;
+                        end = 7;
+                    }
+                } else if (i == 1) {
+                    if (stationIndex.indexOf(fromStation) > stationIndex.indexOf(toStation)) {
+                        start = 1;
+                        end = 7;
+                    } else {
+                        start = 8;
+                        end = 14;
+                    }
+                }
 
                 for (let i = start; i <= end; i++) {
-                    const [rows1, fields1] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${flag ? toStation : fromStation}'`);
-                    const [rows2, fields2] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${flag ? fromStation : toStation}'`);
+                    const [rows1, fields1] = await pool.execute(
+                        `SELECT * FROM se${i}schedule WHERE StationID = '${i == 0 ? fromStation : toStation}'`
+                    );
+                    const [rows2, fields2] = await pool.execute(
+                        `SELECT * FROM se${i}schedule WHERE StationID = '${i == 0 ? toStation : fromStation}'`
+                    );
 
                     if (rows1 && rows2) {
                         data.list.push({
