@@ -50,7 +50,7 @@ const getData = async (req, res) => {
             }
             return res.status(200).json({
                 message: 'ok',
-                data: data,
+                data: [data],
             });
         }
         case 2: {
