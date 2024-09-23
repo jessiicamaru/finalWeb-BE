@@ -117,4 +117,43 @@ const getData = async (req, res) => {
     }
 };
 
-export { getAllTrainSchedule, getData };
+const searchBookedByCoach = async (req, res) => {
+    //http://localhost:4000/api/v1/searchBookedByCoach?trainid=SE8&coach=2&date=2024-12-16&depart=DN&arrive=DH
+    const { trainid, coach, date, depart, arrive } = req.query;
+
+    const data = [];
+
+    if (!trainid || !coach || !date || !depart || !arrive) {
+        return res.status(400).json({
+            message: 'error! Enter query',
+        });
+    }
+
+    const [rows, fields] = await pool.execute(
+        `SELECT * FROM bookedticket WHERE Coach = ${coach} AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
+    );
+
+    //`SELECT * FROM ${trainid}schedule WHERE Coach = '${coach}' AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}'`
+
+    console.log({ trainid, coach, date, depart, arrive });
+
+    return res.status(200).json({
+        message: 'ok',
+        data: rows,
+    });
+};
+
+const searchUnavailableCoachByTrain = async (req, res) => {
+    const { trainid, date, depart, arrive } = req.query;
+
+    const [rows, fields] = await pool.execute(
+        `SELECT Coach FROM unavailablecoach WHERE DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
+    );
+
+    return res.status(200).json({
+        message: 'ok',
+        data: rows,
+    });
+};
+
+export { getAllTrainSchedule, getData, searchBookedByCoach, searchUnavailableCoachByTrain };
