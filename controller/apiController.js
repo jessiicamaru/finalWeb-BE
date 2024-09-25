@@ -1,4 +1,7 @@
 import pool from '../config/connectDB.js';
+import 'dotenv/config';
+
+import { tokenGenerator } from '../utils/tokenConverter.js';
 
 const stationIndex = ['HN', 'ND', 'TH', 'VIN', 'DH', 'HUE', 'DN', 'QNG', 'QNO', 'NT', 'PT', 'BT', 'SG'];
 
@@ -25,6 +28,22 @@ const getData = async (req, res) => {
     */
 
     const { fromStation, toStation, way, date } = req.body.data;
+    const ip = req.ip;
+
+    const payload = {
+        fromStation,
+        toStation,
+        way,
+        date,
+        ip,
+    };
+
+    const token = tokenGenerator(payload);
+    res.cookie('u_t', token, {
+        maxAge: 15 * 1000,
+        httpOnly: true,
+        secure: true,
+    });
 
     switch (way) {
         case 1: {
@@ -48,6 +67,7 @@ const getData = async (req, res) => {
                     });
                 }
             }
+
             return res.status(200).json({
                 message: 'ok',
                 data: [data],
@@ -117,9 +137,15 @@ const getData = async (req, res) => {
     }
 };
 
-const searchBookedByCoach = async (req, res) => {
-    //http://localhost:4000/api/v1/searchBookedByCoach?trainid=SE8&coach=2&date=2024-12-16&depart=DN&arrive=DH
+const searchUnavailableSeatbyCoach = async (req, res) => {
+    //http://localhost:4000/api/v1/searchUnavailableSeatbyCoach?trainid=SE8&coach=2&date=2024-12-16&depart=DN&arrive=DH
     const { trainid, coach, date, depart, arrive } = req.query;
+
+    if (!req.cookies['u_t']) {
+        return res.status(401).json({
+            message: 'Token has expired',
+        });
+    }
 
     const data = [];
 
@@ -130,12 +156,10 @@ const searchBookedByCoach = async (req, res) => {
     }
 
     const [rows, fields] = await pool.execute(
-        `SELECT * FROM bookedticket WHERE Coach = ${coach} AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
+        `SELECT Position FROM bookedticket WHERE Coach = ${coach} AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
     );
 
     //`SELECT * FROM ${trainid}schedule WHERE Coach = '${coach}' AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}'`
-
-    console.log({ trainid, coach, date, depart, arrive });
 
     return res.status(200).json({
         message: 'ok',
@@ -145,6 +169,12 @@ const searchBookedByCoach = async (req, res) => {
 
 const searchUnavailableCoachByTrain = async (req, res) => {
     const { trainid, date, depart, arrive } = req.query;
+
+    if (!req.cookies['u_t']) {
+        return res.status(401).json({
+            message: 'Token has expired',
+        });
+    }
 
     const [rows, fields] = await pool.execute(
         `SELECT Coach FROM unavailablecoach WHERE DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
@@ -156,4 +186,4 @@ const searchUnavailableCoachByTrain = async (req, res) => {
     });
 };
 
-export { getAllTrainSchedule, getData, searchBookedByCoach, searchUnavailableCoachByTrain };
+export { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain };
