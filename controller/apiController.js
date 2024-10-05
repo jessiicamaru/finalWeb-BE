@@ -1,9 +1,10 @@
 import pool from '../config/connectDB.js';
 import 'dotenv/config';
 
-import { tokenGenerator } from '../utils/tokenConverter.js';
+import { tokenGenerator } from '../utils/tokenGenerator.js';
 
 const stationIndex = ['HN', 'ND', 'TH', 'VIN', 'DH', 'HUE', 'DN', 'QNG', 'QNO', 'NT', 'PT', 'BT', 'SG'];
+const maxAge = 15 * 60 * 1000;
 
 const getAllTrainSchedule = async (req, res) => {
     //http://localhost:4000/api/v1/trainid=se1
@@ -40,7 +41,7 @@ const getData = async (req, res) => {
 
     const token = tokenGenerator(payload);
     res.cookie('u_t', token, {
-        maxAge: 15 * 1000,
+        maxAge,
         httpOnly: true,
         secure: true,
     });

@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import 'dotenv/config';
+
 const JWTSecretKey = process.env.JWT_SECRET_KEY;
 const base64url = (str) => {
     return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
