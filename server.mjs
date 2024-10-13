@@ -1,5 +1,6 @@
 import express from 'express';
 import initAPIRoute from './route/api.js';
+import initZaloPayRoute from './route/zalopay.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -26,3 +27,4 @@ app.listen(port, () => {
 });
 
 initAPIRoute(app);
+initZaloPayRoute(app);
