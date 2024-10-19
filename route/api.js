@@ -1,5 +1,11 @@
 import express from 'express';
-import { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain } from '../controller/apiController.js';
+import {
+    getAllTrainSchedule,
+    getData,
+    searchUnavailableSeatbyCoach,
+    searchUnavailableCoachByTrain,
+    clearCookie,
+} from '../controller/apiController.js';
 
 let router = express.Router();
 
@@ -9,6 +15,7 @@ const initAPIRoute = (app) => {
     router.post('/senddata', getData);
     router.get('/searchUnavailableSeatbyCoach', searchUnavailableSeatbyCoach);
     router.get('/searchUnavailableCoachByTrain', searchUnavailableCoachByTrain);
+    router.post('/clearCookie', clearCookie);
 
     return app.use('/api/v1/', router);
 };

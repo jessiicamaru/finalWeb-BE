@@ -191,4 +191,18 @@ const searchUnavailableCoachByTrain = async (req, res) => {
     });
 };
 
-export { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain };
+const clearCookie = (req, res) => {
+    if (!req.cookies['u_t']) {
+        return res.status(200).json({
+            message: 'Cookie has been cleared',
+            cookie_code: 1,
+        });
+    }
+    res.clearCookie('u_t', { path: '/' });
+    return res.status(200).json({
+        message: 'Cookie has been cleared',
+        cookie_code: 1,
+    });
+};
+
+export { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain, clearCookie };

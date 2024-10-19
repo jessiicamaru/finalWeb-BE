@@ -2,6 +2,7 @@ import CryptoJS from 'crypto-js';
 import moment from 'moment';
 import axios from 'axios';
 import pool from '../config/connectDB.js';
+import QueryString from 'qs';
 import 'dotenv/config';
 
 const config = {
@@ -23,20 +24,13 @@ export const payment = async (req, res) => {
         },
     };
 
-    console.log(req.body.data);
+    console.log('body', req.body.data);
 
     const items = JSON.parse(req.body.data.list); // danh sách vé tàu gửi lên
-    const transID = Math.floor(Math.random() * 1000000);
-    const user = JSON.stringify({
-        id: req.body.data.id,
-        name: req.body.data.name,
-        phone: req.body.data.phone,
-        email: req.body.data.email,
-    });
 
     const order = {
         app_id: config.app_id,
-        app_trans_id: `${moment().format('YYMMDD')}_${transID}_${req.body.data.id}`, // translation missing: vi.docs.shared.sample_code.comments.app_trans_id
+        app_trans_id: req.body.data.trans_id, // translation missing: vi.docs.shared.sample_code.comments.app_trans_id
         app_user: req.body.data.name + ' ' + req.body.data.id,
         app_time: Date.now(), // miliseconds
         item: JSON.stringify(items),
@@ -45,7 +39,7 @@ export const payment = async (req, res) => {
         //khi thanh toán xong, zalopay server sẽ POST đến url này để thông báo cho server của mình
         //Chú ý: cần dùng ngrok để public url thì Zalopay Server mới call đến được
         callback_url: process.env.NGROK_ENDPOINT + '/api/v2/zalopay/callback',
-        description: `Tickets - Payment for the order #${transID}`,
+        description: `Tickets - Payment for the order #${req.body.data.trans_id}`,
         bank_code: '', // để trống thì có thể thanh toán qua nhiều phương thức khác như visa hoặc ngân hàng
     };
 
@@ -118,4 +112,50 @@ export const callback = async (req, res) => {
 
     // thông báo kết quả cho ZaloPay server
     res.json(result);
+};
+
+export const checkOrderStatus = async (req, res) => {
+    console.log('check order', req.body);
+    const { app_trans_id } = req.body;
+    console.log('app_trans_id', app_trans_id);
+
+    let postData = {
+        app_id: process.env.ZALOPAY_CONFIG_APP_ID,
+        app_trans_id, // Input your app_trans_id
+    };
+
+    let data = postData.app_id + '|' + postData.app_trans_id + '|' + config.key1; // appid|app_trans_id|key1
+    postData.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+
+    let postConfig = {
+        method: 'post',
+        url: process.env.ZALOPAY_QUERY_ENDPOINT,
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        data: QueryString.stringify(postData),
+    };
+
+    try {
+        const result = await axios(postConfig);
+        console.log(result.data);
+        return res.status(200).json(result.data);
+        /**
+     * kết quả mẫu
+      {
+        "return_code": 1, // 1 : Thành công, 2 : Thất bại, 3 : Đơn hàng chưa thanh toán hoặc giao dịch đang xử lý
+        "return_message": "",
+        "sub_return_code": 1,
+        "sub_return_message": "",
+        "is_processing": false,
+        "amount": 50000,
+        "zp_trans_id": 240331000000175,
+        "server_time": 1711857138483,
+        "discount_amount": 0
+      }
+    */
+    } catch (error) {
+        console.log('lỗi');
+        console.log(error);
+    }
 };
