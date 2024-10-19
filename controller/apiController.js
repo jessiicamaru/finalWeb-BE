@@ -57,8 +57,8 @@ const getData = async (req, res) => {
             let end = flag ? 14 : 7;
 
             for (let i = start; i <= end; i++) {
-                const [rows1, fields1] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${fromStation}'`);
-                const [rows2, fields2] = await pool.execute(`SELECT * FROM se${i}schedule WHERE StationID = '${toStation}'`);
+                const [rows1, fields1] = await pool.execute(`SELECT * FROM trainschedule WHERE StationID = '${fromStation}' AND TrainID = 'SE${i}'`);
+                const [rows2, fields2] = await pool.execute(`SELECT * FROM trainschedule WHERE StationID = '${toStation}' AND TrainID = 'SE${i}'`);
 
                 if (rows1 && rows2) {
                     data.list.push({
@@ -107,17 +107,17 @@ const getData = async (req, res) => {
                     }
                 }
 
-                for (let i = start; i <= end; i++) {
+                for (let j = start; j <= end; j++) {
                     const [rows1, fields1] = await pool.execute(
-                        `SELECT * FROM se${i}schedule WHERE StationID = '${i == 0 ? fromStation : toStation}'`
+                        `SELECT * FROM trainschedule WHERE StationID = '${i == 0 ? fromStation : toStation}' AND TrainID = 'SE${j}'`
                     );
                     const [rows2, fields2] = await pool.execute(
-                        `SELECT * FROM se${i}schedule WHERE StationID = '${i == 0 ? toStation : fromStation}'`
+                        `SELECT * FROM trainschedule WHERE StationID = '${i == 0 ? toStation : fromStation}' AND TrainID = 'SE${j}'`
                     );
 
                     if (rows1 && rows2) {
                         data.list.push({
-                            trainid: `SE${i}`,
+                            trainid: `SE${j}`,
                             scheduleDepart: rows1[0],
                             scheduleArrive: rows2[0],
                         });
@@ -157,6 +157,10 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
     }
 
     const [rows, fields] = await pool.execute(
+        `SELECT Position FROM bookedticket WHERE Coach = ${coach} AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
+    );
+
+    console.log(
         `SELECT Position FROM bookedticket WHERE Coach = ${coach} AND DATE(BookingDate) = '${date}' AND DepartStation = '${depart}' AND ArriveStation = '${arrive}' AND TrainID = '${trainid}'`
     );
 
