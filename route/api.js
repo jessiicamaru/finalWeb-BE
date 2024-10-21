@@ -5,6 +5,7 @@ import {
     searchUnavailableSeatbyCoach,
     searchUnavailableCoachByTrain,
     clearCookie,
+    getBookedTicketId,
 } from '../controller/apiController.js';
 
 let router = express.Router();
@@ -16,6 +17,7 @@ const initAPIRoute = (app) => {
     router.get('/searchUnavailableSeatbyCoach', searchUnavailableSeatbyCoach);
     router.get('/searchUnavailableCoachByTrain', searchUnavailableCoachByTrain);
     router.post('/clearCookie', clearCookie);
+    router.post('/getBookedTicketId', getBookedTicketId);
 
     return app.use('/api/v1/', router);
 };

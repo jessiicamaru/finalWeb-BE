@@ -4,9 +4,11 @@ import initZaloPayRoute from './route/zalopay.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
-
+import pool from './config/connectDB.js';
 const app = express();
 const port = 4000;
+
+const flag = true;
 
 const corsOptions = {
     origin: 'http://localhost:5173',
@@ -25,6 +27,11 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Example app listening on http://localhost:${port}/`);
 });
+
+if (flag) {
+    pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
+    pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
+}
 
 initAPIRoute(app);
 initZaloPayRoute(app);

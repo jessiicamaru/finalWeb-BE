@@ -74,7 +74,7 @@ export const payment = async (req, res) => {
 
 export const callback = async (req, res) => {
     let result = {};
-    console.log(req.body);
+    console.log('callback ');
     try {
         let dataStr = req.body.data;
         let reqMac = req.body.mac;
@@ -91,11 +91,13 @@ export const callback = async (req, res) => {
             // thanh toán thành công
             // merchant cập nhật trạng thái cho đơn hàng ở đây
             let dataJson = JSON.parse(dataStr, config.key2);
-            console.log("update order's status = success where app_trans_id =", dataJson['app_trans_id']);
+            // console.log("update order's status = success where app_trans_id =", dataJson['app_trans_id']);
             console.log(dataJson);
             const { attachData } = JSON.parse(dataJson['embed_data']);
 
             JSON.parse(dataJson['item']).forEach(async (item) => {
+                console.log(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
+                VALUES (UUID(), '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
                 const [rows, fields] =
                     await pool.execute(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
                 VALUES (UUID(), '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
