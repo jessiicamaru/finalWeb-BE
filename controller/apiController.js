@@ -158,11 +158,11 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
          FROM bookedticket 
          JOIN Station AS Depart ON bookedticket.DepartStation = Depart.StationID 
          JOIN Station AS Arrive ON bookedticket.ArriveStation = Arrive.StationID
-         JOIN Station AS NewDepart ON NewDepart.StationID = '${depart}'
-         JOIN Station AS NewArrive ON NewArrive.StationID = '${arrive}'
-         WHERE Coach = ${coach}
-         AND DATE(BookingDate) = '${date}'
-         AND TrainID = '${trainid}'
+         JOIN Station AS NewDepart ON NewDepart.StationID = ?
+         JOIN Station AS NewArrive ON NewArrive.StationID = ?
+         WHERE Coach = ?
+         AND DATE(BookingDate) = ?
+         AND TrainID = ?
          AND (
              (Depart.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
              OR
@@ -171,7 +171,8 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
              (Arrive.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
               OR
              (NewDepart.StationOrder >= Depart.StationOrder AND NewArrive.StationOrder >= Arrive.StationOrder)
-         );`
+         );`,
+        [depart, arrive, coach, date, trainid]
     );
 
     return res.status(200).json({
@@ -196,10 +197,10 @@ const searchUnavailableCoachByTrain = async (req, res) => {
         FROM bookedticket
         JOIN Station AS Depart ON bookedticket.DepartStation = Depart.StationID
         JOIN Station AS Arrive ON bookedticket.ArriveStation = Arrive.StationID
-        JOIN Station AS NewDepart ON NewDepart.StationID = '${depart}'
-        JOIN Station AS NewArrive ON NewArrive.StationID = '${arrive}'
-        WHERE bookedticket.TrainID = '${trainid}'
-        AND DATE(bookedticket.BookingDate) = '${date}'
+        JOIN Station AS NewDepart ON NewDepart.StationID = ?
+        JOIN Station AS NewArrive ON NewArrive.StationID = ?
+        WHERE bookedticket.TrainID = ?
+        AND DATE(bookedticket.BookingDate) = ?
         AND (
             (Depart.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
             OR
@@ -210,7 +211,8 @@ const searchUnavailableCoachByTrain = async (req, res) => {
             (NewDepart.StationOrder >= Depart.StationOrder AND NewArrive.StationOrder >= Arrive.StationOrder)
         )
         GROUP BY bookedticket.Coach;
-    `
+    `,
+        [depart, arrive, trainid, date]
     );
 
     // Xử lý và kiểm tra các toa bị đầy
@@ -225,12 +227,12 @@ const searchUnavailableCoachByTrain = async (req, res) => {
 const getBookedTicketId = async (req, res) => {
     const { name, email, id, phone, bookingDate } = req.body.data;
     const [rows, fields] = await pool.execute(
-        `SELECT ID FROM bookedticket WHERE cus_name = '${name}' AND cus_email = '${email}' AND bookingDate = '${bookingDate}' AND cus_id = '${id}' AND cus_phone = '${phone}'`
+        `SELECT ID FROM bookedticket WHERE cus_name = ? AND cus_email = ? AND bookingDate = ? AND cus_id = ? AND cus_phone = ?`,
+        [name, email, bookingDate, id, phone]
     );
     const ids = rows.map((row) => row.ID);
     const code = ids.join(';');
 
-    console.log(ids); // In danh sách các ID
     return res.status(200).json({
         code,
     });
@@ -238,16 +240,45 @@ const getBookedTicketId = async (req, res) => {
 
 const getTicket = async (req, res) => {
     const { phone, email, bookingCode } = req.body.data;
-    const [rows, fields] = await pool.execute(
-        `SELECT * FROM bookedticket WHERE AND cus_email = '${email}' AND cus_phone = '${phone}' AND ID = '${bookingCode}'`
-    );
+    const [rows, fields] = await pool.execute(`SELECT * FROM bookedticket WHERE cus_email = ? AND cus_phone = ? AND ID = ?`, [
+        email,
+        phone,
+        bookingCode,
+    ]);
+    return res.status(200).json({
+        list: rows,
+    });
+};
+
+const getCode = async (req, res) => {
+    const { email } = req.body.data;
+    const [rows, fields] = await pool.execute(`SELECT ID FROM bookedticket WHERE cus_email = ? `, [email]);
     const ids = rows.map((row) => row.ID);
     const code = ids.join(';');
 
-    console.log(ids); // In danh sách các ID
     return res.status(200).json({
+        status_code: 1,
         code,
     });
+};
+
+const returnTicket = async (req, res) => {
+    console.log(1);
+    const { phone, email, bookingCode } = req.body.data;
+
+    const [result] = await pool.execute(`DELETE FROM bookedticket WHERE cus_email = ? AND cus_phone = ? AND ID = ?`, [email, phone, bookingCode]);
+
+    if (result.affectedRows > 0) {
+        return res.status(200).json({
+            status_code: 1,
+            message: 'ok',
+        });
+    } else {
+        return res.status(200).json({
+            status_code: 0,
+            message: 'Ticket not found',
+        });
+    }
 };
 
 const clearCookie = (req, res) => {
@@ -264,4 +295,14 @@ const clearCookie = (req, res) => {
     });
 };
 
-export { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain, clearCookie, getBookedTicketId };
+export {
+    getAllTrainSchedule,
+    getData,
+    searchUnavailableSeatbyCoach,
+    searchUnavailableCoachByTrain,
+    clearCookie,
+    getBookedTicketId,
+    getTicket,
+    getCode,
+    returnTicket,
+};
