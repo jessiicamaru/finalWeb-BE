@@ -141,6 +141,8 @@ const getData = async (req, res) => {
 const searchUnavailableSeatbyCoach = async (req, res) => {
     const { trainid, coach, date, depart, arrive } = req.query;
 
+    let flag = stationIndex.indexOf(depart) > stationIndex.indexOf(arrive) ? '>' : '<';
+
     if (!req.cookies['u_t']) {
         return res.status(401).json({
             message: 'Token has expired',
@@ -164,16 +166,31 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
          AND DATE(BookingDate) = ?
          AND TrainID = ?
          AND (
-             (Depart.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
-             OR
-             (Depart.StationOrder >= NewDepart.StationOrder AND Depart.StationOrder <= NewArrive.StationOrder)
-             OR
-             (Arrive.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
-              OR
-             (NewDepart.StationOrder >= Depart.StationOrder AND NewArrive.StationOrder >= Arrive.StationOrder)
+             (Depart.StationOrder ${flag}= NewDepart.StationOrder AND NewDepart.StationOrder ${flag} Arrive.StationOrder)
+             OR 
+             (Depart.StationOrder ${flag} NewArrive.StationOrder AND NewArrive.StationOrder ${flag}= Arrive.StationOrder)
+             OR 
+             (NewDepart.StationOrder ${flag}= Depart.StationOrder AND Arrive.StationOrder ${flag}= NewArrive.StationOrder)
          );`,
         [depart, arrive, coach, date, trainid]
     );
+
+    console.log(`SELECT Position 
+         FROM bookedticket 
+         JOIN Station AS Depart ON bookedticket.DepartStation = Depart.StationID 
+         JOIN Station AS Arrive ON bookedticket.ArriveStation = Arrive.StationID
+         JOIN Station AS NewDepart ON NewDepart.StationID = ${depart}
+         JOIN Station AS NewArrive ON NewArrive.StationID = ${arrive}
+         WHERE Coach = ${coach}
+         AND DATE(BookingDate) = ${date}
+         AND TrainID = ${trainid}
+         AND (
+             (Depart.StationOrder ${flag}= NewDepart.StationOrder AND NewDepart.StationOrder ${flag} Arrive.StationOrder)
+             OR 
+             (Depart.StationOrder ${flag} NewArrive.StationOrder AND NewArrive.StationOrder ${flag}= Arrive.StationOrder)
+             OR 
+             (NewDepart.StationOrder ${flag}= Depart.StationOrder AND Arrive.StationOrder ${flag}= NewArrive.StationOrder)
+         );`);
 
     return res.status(200).json({
         message: 'ok',
@@ -183,6 +200,8 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
 
 const searchUnavailableCoachByTrain = async (req, res) => {
     const { trainid, date, depart, arrive } = req.query;
+
+    let flag = stationIndex.indexOf(depart) > stationIndex.indexOf(arrive) ? '>' : '<';
 
     if (!req.cookies['u_t']) {
         return res.status(401).json({
@@ -202,14 +221,12 @@ const searchUnavailableCoachByTrain = async (req, res) => {
         WHERE bookedticket.TrainID = ?
         AND DATE(bookedticket.BookingDate) = ?
         AND (
-            (Depart.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
-            OR
-            (Depart.StationOrder <= NewDepart.StationOrder AND Arrive.StationOrder >= NewDepart.StationOrder)
-            OR
-            (Depart.StationOrder >= NewDepart.StationOrder AND Arrive.StationOrder <= NewArrive.StationOrder)
-            OR
-            (NewDepart.StationOrder >= Depart.StationOrder AND NewArrive.StationOrder >= Arrive.StationOrder)
-        )
+            (Depart.StationOrder ${flag}= NewDepart.StationOrder AND NewDepart.StationOrder ${flag} Arrive.StationOrder)
+             OR 
+             (Depart.StationOrder ${flag} NewArrive.StationOrder AND NewArrive.StationOrder ${flag}= Arrive.StationOrder)
+              OR 
+             (NewDepart.StationOrder ${flag}= Depart.StationOrder AND Arrive.StationOrder ${flag}= NewArrive.StationOrder)
+             )
         GROUP BY bookedticket.Coach;
     `,
         [depart, arrive, trainid, date]
