@@ -29,7 +29,7 @@ app.listen(port, () => {
 });
 
 if (flag) {
-    pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
+    pool.execute(`DELETE FROM paidorder WHERE bookingdate < CURDATE()`);
     pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
 }
 
