@@ -241,6 +241,20 @@ const searchUnavailableCoachByTrain = async (req, res) => {
     });
 };
 
+const getBookedTicketId = async (req, res) => {
+    const { name, email, id, phone, bookingDate } = req.body.data;
+    const [rows, fields] = await pool.execute(
+        `SELECT ID FROM bookedticket WHERE cus_name = ? AND cus_email = ? AND bookingDate = ? AND cus_id = ? AND cus_phone = ?`,
+        [name, email, bookingDate, id, phone]
+    );
+    const ids = rows.map((row) => row.ID);
+    const code = ids.join(';');
+
+    return res.status(200).json({
+        code,
+    });
+};
+
 const getTicket = async (req, res) => {
     const { phone, email, bookingCode } = req.body.data;
     const [rows, fields] = await pool.execute(`SELECT * FROM bookedticket WHERE cus_email = ? AND cus_phone = ? AND ID = ?`, [
@@ -266,25 +280,20 @@ const getCode = async (req, res) => {
 };
 
 const returnTicket = async (req, res) => {
+    console.log(1);
     const { phone, email, bookingCode } = req.body.data;
-    const [rs] = await pool.execute(`SELECT * FROM paidorder WHERE TicketID = ?`, [bookingCode]);
 
-    const [result] = await pool.execute(`SELECT * FROM bookedticket WHERE cus_email = ? AND cus_phone = ? AND ID = ?`, [email, phone, bookingCode]);
+    const [result] = await pool.execute(`DELETE FROM bookedticket WHERE cus_email = ? AND cus_phone = ? AND ID = ?`, [email, phone, bookingCode]);
 
-    console.log({ phone, email, bookingCode });
-
-    console.log(result.length);
-
-    if (result.length > 0) {
+    if (result.affectedRows > 0) {
         return res.status(200).json({
-            code: 1,
-            data: rs,
+            status_code: 1,
             message: 'ok',
         });
     } else {
-        return res.status(400).json({
-            code: 2,
-            message: 'ticket not found',
+        return res.status(200).json({
+            status_code: 0,
+            message: 'Ticket not found',
         });
     }
 };
@@ -303,4 +312,14 @@ const clearCookie = (req, res) => {
     });
 };
 
-export { getAllTrainSchedule, getData, searchUnavailableSeatbyCoach, searchUnavailableCoachByTrain, clearCookie, getTicket, getCode, returnTicket };
+export {
+    getAllTrainSchedule,
+    getData,
+    searchUnavailableSeatbyCoach,
+    searchUnavailableCoachByTrain,
+    clearCookie,
+    getBookedTicketId,
+    getTicket,
+    getCode,
+    returnTicket,
+};

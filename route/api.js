@@ -5,6 +5,7 @@ import {
     searchUnavailableSeatbyCoach,
     searchUnavailableCoachByTrain,
     clearCookie,
+    getBookedTicketId,
     getTicket,
     getCode,
     returnTicket,
@@ -19,6 +20,7 @@ const initAPIRoute = (app) => {
     router.get('/searchUnavailableSeatbyCoach', searchUnavailableSeatbyCoach);
     router.get('/searchUnavailableCoachByTrain', searchUnavailableCoachByTrain);
     router.post('/clearCookie', clearCookie);
+    router.post('/getBookedTicketId', getBookedTicketId);
     router.post('/getTicket', getTicket);
     router.post('/getCode', getCode);
     router.post('/returnTicket', returnTicket);
