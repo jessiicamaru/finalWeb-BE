@@ -12,7 +12,7 @@ const config = {
     endpoint: process.env.ZALOPAY_CREATE_ENDPOINT,
 };
 
-export const payment = async (req, res) => {
+const payment = async (req, res) => {
     const embed_data = {
         //sau khi hoàn tất thanh toán sẽ đi vào link này (thường là link web thanh toán thành công của mình)
         redirecturl: '',
@@ -72,7 +72,7 @@ export const payment = async (req, res) => {
     }
 };
 
-export const callback = async (req, res) => {
+const callback = async (req, res) => {
     let result = {};
     console.log('callback ');
     try {
@@ -97,10 +97,10 @@ export const callback = async (req, res) => {
 
             JSON.parse(dataJson['item']).forEach(async (item) => {
                 console.log(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
-                VALUES (UUID(), '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
+                VALUES ('${item.id}', '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
                 const [rows, fields] =
                     await pool.execute(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
-                VALUES (UUID(), '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
+                VALUES ('${item.id}', '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
             });
 
             result.return_code = 1;
@@ -116,7 +116,7 @@ export const callback = async (req, res) => {
     res.json(result);
 };
 
-export const checkOrderStatus = async (req, res) => {
+const checkOrderStatus = async (req, res) => {
     console.log('check order', req.body);
     const { app_trans_id } = req.body;
     console.log('app_trans_id', app_trans_id);
@@ -161,3 +161,5 @@ export const checkOrderStatus = async (req, res) => {
         console.log(error);
     }
 };
+
+export { payment, callback, checkOrderStatus };

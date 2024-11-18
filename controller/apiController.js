@@ -2,6 +2,7 @@ import pool from '../config/connectDB.js';
 import 'dotenv/config';
 
 import { tokenGenerator } from '../utils/tokenGenerator.js';
+import { checkCookie } from '../utils/checkCookie.js';
 
 const stationIndex = ['HN', 'ND', 'TH', 'VIN', 'DH', 'HUE', 'DN', 'QNG', 'QNO', 'NT', 'PT', 'BT', 'SG'];
 const maxAge = 15 * 60 * 1000;
@@ -143,9 +144,9 @@ const searchUnavailableSeatbyCoach = async (req, res) => {
 
     let flag = stationIndex.indexOf(depart) > stationIndex.indexOf(arrive) ? '>' : '<';
 
-    if (!req.cookies['u_t']) {
-        return res.status(401).json({
-            message: 'Token has expired',
+    if (!checkCookie(req.cookies['u_t'])) {
+        return res.status(400).json({
+            message: 'Invalid cookie',
         });
     }
 
@@ -203,7 +204,7 @@ const searchUnavailableCoachByTrain = async (req, res) => {
 
     let flag = stationIndex.indexOf(depart) > stationIndex.indexOf(arrive) ? '>' : '<';
 
-    if (!req.cookies['u_t']) {
+    if (!checkCookie(req.cookies['u_t'])) {
         return res.status(401).json({
             message: 'Token has expired',
         });
@@ -238,20 +239,6 @@ const searchUnavailableCoachByTrain = async (req, res) => {
     return res.status(200).json({
         message: 'ok',
         data: unavailableCoaches,
-    });
-};
-
-const getBookedTicketId = async (req, res) => {
-    const { name, email, id, phone, bookingDate } = req.body.data;
-    const [rows, fields] = await pool.execute(
-        `SELECT ID FROM bookedticket WHERE cus_name = ? AND cus_email = ? AND bookingDate = ? AND cus_id = ? AND cus_phone = ?`,
-        [name, email, bookingDate, id, phone]
-    );
-    const ids = rows.map((row) => row.ID);
-    const code = ids.join(';');
-
-    return res.status(200).json({
-        code,
     });
 };
 
@@ -299,7 +286,7 @@ const returnTicket = async (req, res) => {
 };
 
 const clearCookie = (req, res) => {
-    if (!req.cookies['u_t']) {
+    if (!checkCookie(req.cookies['u_t'])) {
         return res.status(200).json({
             message: 'Cookie has been cleared',
             cookie_code: 1,
@@ -318,8 +305,8 @@ export {
     searchUnavailableSeatbyCoach,
     searchUnavailableCoachByTrain,
     clearCookie,
-    getBookedTicketId,
     getTicket,
     getCode,
     returnTicket,
+    checkCookie,
 };
