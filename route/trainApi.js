@@ -8,11 +8,11 @@ import {
     getTicket,
     getCode,
     returnTicket,
-} from '../controller/apiController.js';
+} from '../controller/trainTicketController.js';
 
 let router = express.Router();
 
-const initAPIRoute = (app) => {
+const initTrainRoute = (app) => {
     router.get('/search/:trainid', getAllTrainSchedule);
     router.get('/search/:stationid', getAllTrainSchedule);
     router.post('/senddata', getData);
@@ -26,4 +26,4 @@ const initAPIRoute = (app) => {
     return app.use('/api/v1/', router);
 };
 
-export default initAPIRoute;
+export default initTrainRoute;

@@ -1,6 +1,7 @@
 import express from 'express';
-import initAPIRoute from './route/api.js';
-import initZaloPayRoute from './route/zalopay.js';
+import initTrainRoute from './route/trainApi.js';
+import initZaloPayRoute from './route/zalopayApi.js';
+import initUserRoute from './route/userApi.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
@@ -33,5 +34,6 @@ if (flag) {
     pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
 }
 
-initAPIRoute(app);
+initTrainRoute(app);
 initZaloPayRoute(app);
+initUserRoute(app);
