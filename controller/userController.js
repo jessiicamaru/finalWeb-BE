@@ -24,4 +24,38 @@ const addUser = async (req, res) => {
     });
 };
 
-export { addUser };
+const getUser = async (req, res) => {
+    //http://localhost:4000/api/v3/get-user/?uid=Xzcnka6u4CVjvSfCqAUCmGQuhst2
+    const { uid, email, password } = req.query;
+
+    if (uid) {
+        const [rows, fields] = await pool.execute('SELECT * FROM users WHERE UID = ?', [uid]);
+
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
+
+    if (email && password) {
+        const [rows, fields] = await pool.execute('SELECT * FROM users WHERE Email = ? AND Password = ?', [email, password]);
+
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
+};
+
+const updateUser = async (req, res) => {
+    const { uid, password } = req.body;
+
+    const [rows, fields] = await pool.execute('UPDATE users SET Password = ? WHERE UID = ?', [password, uid]);
+
+    return res.status(200).json({
+        message: 'ok',
+        data: rows[0],
+    });
+};
+
+export { addUser, getUser, updateUser };
