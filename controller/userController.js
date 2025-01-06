@@ -48,14 +48,46 @@ const getUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { uid, password } = req.body;
+    const { uid, password, idNumber, phone } = req.body;
 
-    const [rows, fields] = await pool.execute('UPDATE users SET Password = ? WHERE UID = ?', [password, uid]);
+    console.log({ uid, password, idNumber, phone });
+
+    if (password) {
+        const [rows, fields] = await pool.execute('UPDATE users SET Password = ? WHERE UID = ?', [password, uid]);
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
+
+    if (idNumber && phone) {
+        const [rows, fields] = await pool.execute('UPDATE users SET IDNumber = ?, PhoneNumber = ? WHERE UID = ?', [idNumber, phone, uid]);
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
+};
+
+const getOrder = async (req, res) => {
+    //http://localhost:4000/api/v3/get-order/?uid=Xzcnka6u4CVjvSfCqAUCmGQuhst2
+    const { uid } = req.query;
+
+    const [rows, fields] = await pool.execute(
+        `SELECT TicketID, cus_email, cus_id, cus_phone, cus_name, sD.StationName 
+        AS DepartStation, sA.StationName AS ArriveStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, Price
+        FROM orders 
+        JOIN bookedticket AS b ON orders.TicketID = b.ID 
+        JOIN station AS sD ON b.DepartStation = sD.StationID
+        JOIN station AS sA ON b.ArriveStation = sA.StationID
+        WHERE UserID = ?`,
+        [uid]
+    );
 
     return res.status(200).json({
         message: 'ok',
-        data: rows[0],
+        data: rows,
     });
 };
 
-export { addUser, getUser, updateUser };
+export { addUser, getUser, updateUser, getOrder };

@@ -6,7 +6,7 @@ const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     database: 'railwayticket',
-    // password: 'password'
+    password: '@Dung2472005',
 });
 
 export default pool;

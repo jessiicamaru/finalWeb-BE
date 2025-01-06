@@ -30,8 +30,23 @@ app.listen(port, () => {
 });
 
 if (flag) {
-    pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
-    pool.execute(`DELETE FROM BookedTicket WHERE bookingdate < CURDATE()`);
+    // Xóa trong bảng BookedTicket và lưu các TicketID bị xóa
+    const [rows] = await pool.execute(`
+        SELECT ID 
+        FROM BookedTicket 
+        WHERE bookingdate < DATE_SUB(CURDATE(), INTERVAL 2 MONTH)
+    `);
+
+    const ticketIds = rows.map((row) => row.ID);
+
+    if (ticketIds.length > 0) {
+        // Xóa các vé trong bảng orders
+        const placeholders = ticketIds.map(() => '?').join(', ');
+        await pool.execute(`DELETE FROM orders WHERE TicketID IN (${placeholders})`, ticketIds);
+
+        // Xóa các vé trong bảng BookedTicket
+        await pool.execute(`DELETE FROM BookedTicket WHERE ID IN (${placeholders})`, ticketIds);
+    }
 }
 
 initTrainRoute(app);
