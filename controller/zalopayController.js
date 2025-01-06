@@ -17,6 +17,7 @@ const payment = async (req, res) => {
         //sau khi hoàn tất thanh toán sẽ đi vào link này (thường là link web thanh toán thành công của mình)
         redirecturl: '',
         attachData: {
+            uid: req.body.data.uid,
             id: req.body.data.id,
             name: req.body.data.name,
             phone: req.body.data.phone,
@@ -96,11 +97,31 @@ const callback = async (req, res) => {
             const { attachData } = JSON.parse(dataJson['embed_data']);
 
             JSON.parse(dataJson['item']).forEach(async (item) => {
-                console.log(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
-                VALUES ('${item.id}', '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
-                const [rows, fields] =
-                    await pool.execute(`INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name)
-                VALUES ('${item.id}', '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
+                console.log(`INSERT INTO orders (TicketID, UserID, cus_email, cus_id, cus_phone, cus_name)
+                VALUES ('${item.id}', '${attachData.uid}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`);
+                console.log(
+                    `INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate, cus_email, cus_id, cus_phone, cus_name) VALUES ('${item.id}', '${item.toStation}', '${item.fromStation}', '${item.train}', '${item.arrival}', '${item.depart}', ${item.seat}, ${item.coach}, '${item.bookingDate}', '${attachData.email}', '${attachData.id}', '${attachData.phone}', '${attachData.name}');`
+                );
+
+                let order = `INSERT INTO orders (TicketID, UserID, cus_email, cus_id, cus_phone, cus_name) 
+VALUES (?, ?, ?, ?, ?, ?)`;
+
+                let bookedticket = `INSERT INTO bookedticket (ID, ArriveStation, DepartStation, TrainID, Arrive, Depart, Position, Coach, BookingDate) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+                await pool.execute(order, [item.id, attachData.uid, attachData.email, attachData.id, attachData.phone, attachData.name]);
+
+                await pool.execute(bookedticket, [
+                    item.id,
+                    item.toStation,
+                    item.fromStation,
+                    item.train,
+                    item.arrival,
+                    item.depart,
+                    item.seat,
+                    item.coach,
+                    item.bookingDate,
+                ]);
             });
 
             result.return_code = 1;

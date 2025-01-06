@@ -48,14 +48,25 @@ const getUser = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { uid, password } = req.body;
+    const { uid, password, idNumber, phone } = req.body;
 
-    const [rows, fields] = await pool.execute('UPDATE users SET Password = ? WHERE UID = ?', [password, uid]);
+    console.log({ uid, password, idNumber, phone });
 
-    return res.status(200).json({
-        message: 'ok',
-        data: rows[0],
-    });
+    if (password) {
+        const [rows, fields] = await pool.execute('UPDATE users SET Password = ? WHERE UID = ?', [password, uid]);
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
+
+    if (idNumber && phone) {
+        const [rows, fields] = await pool.execute('UPDATE users SET IDNumber = ?, PhoneNumber = ? WHERE UID = ?', [idNumber, phone, uid]);
+        return res.status(200).json({
+            message: 'ok',
+            data: rows[0],
+        });
+    }
 };
 
 export { addUser, getUser, updateUser };
